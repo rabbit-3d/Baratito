@@ -1,1 +1,25 @@
+name: Fetch precios MercadoLibre
 
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # cada 6 horas (UTC)
+  workflow_dispatch: {}     # permite correrlo a mano desde la pestaña Actions
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm install @supabase/supabase-js
+
+      - run: node baratito.js
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          MELI_CLIENT_ID: ${{ secrets.MELI_CLIENT_ID }}
+          MELI_CLIENT_SECRET: ${{ secrets.MELI_CLIENT_SECRET }}
