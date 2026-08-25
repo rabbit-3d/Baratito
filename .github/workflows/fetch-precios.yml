@@ -15,7 +15,7 @@ jobs:
         with:
           node-version: 22
 
-      - run: npm install @supabase/supabase-js
+      - run: npm install @supabase/supabase-js ws
 
       - run: node baratito.js
         env:
