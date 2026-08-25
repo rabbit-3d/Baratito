@@ -180,6 +180,7 @@ async function renovarAccessToken() {
     .single();
 
   if (error || !data) {
+    console.error('Detalle del error de Supabase:', JSON.stringify(error, null, 2));
     throw new Error('No hay meli_refresh_token guardado en baratito.config. Seguí la guía de autorización primero.');
   }
 
