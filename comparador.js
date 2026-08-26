@@ -159,7 +159,12 @@ function parsePrecio(texto) {
 // busca cada link, y si el contenedor cercano tiene un precio, lo toma como producto.
 function extraerProductos(html, urlBase) {
   const $ = cheerio.load(html);
-  $('script, style, noscript').remove(); // su texto interno no debe colarse como título ni precio
+  $('script, style').remove(); // su texto interno no debe colarse como título ni precio
+  // noscript suele traer la URL real de la imagen (fallback de lazy-loading),
+  // así que en vez de borrarlo lo "desenvolvemos" para poder leerla.
+  $('noscript').each((_, el) => {
+    $(el).replaceWith($(el).html() || '');
+  });
   const vistos = new Set();
   const productos = [];
 
@@ -220,6 +225,9 @@ function extraerProductos(html, urlBase) {
         imgEl.attr('data-src') ||
         imgEl.attr('data-original') ||
         imgEl.attr('data-lazy') ||
+        imgEl.attr('data-lazy-src') ||
+        imgEl.attr('data-echo') ||
+        (imgEl.attr('data-srcset') || '').split(',')[0]?.trim().split(' ')[0] ||
         (imgEl.attr('srcset') || '').split(',')[0]?.trim().split(' ')[0] ||
         imgEl.attr('src');
       if (candidato && !candidato.startsWith('data:')) {
