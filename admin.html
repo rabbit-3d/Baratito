@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Baratito — administración</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{
+    --paper:#F6F5F0; --ink:#1C1B17; --ink-soft:#6E6C63; --line:#DEDBD1; --accent:#E8622C;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',system-ui,sans-serif; }
+  .wordmark{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:28px; margin:0; }
+  .wordmark span{ color:var(--accent); }
+
+  #login{ max-width:360px; margin:80px auto; padding:0 24px; }
+  #login input{
+    width:100%; padding:11px 14px; margin-top:12px; border:1.5px solid var(--line); border-radius:8px;
+    font-family:'Inter',sans-serif; font-size:14px;
+  }
+  #login button{
+    width:100%; margin-top:16px; padding:12px; border:none; border-radius:8px;
+    background:var(--ink); color:#fff; font-size:14px; font-weight:500; cursor:pointer;
+  }
+  #login .error{ color:#B33A57; font-size:13px; margin-top:12px; }
+
+  #panel{ display:none; max-width:900px; margin:0 auto; padding:32px 24px 80px; }
+  .header-row{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:24px; }
+  .salir{ font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft); cursor:pointer; background:none; border:none; }
+
+  .item{
+    background:#fff; border:1.5px solid var(--line); border-radius:10px; padding:18px;
+    margin-bottom:12px; display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  }
+  .item h3{ margin:0 0 6px; font-size:15px; }
+  .item a{ color:var(--accent); font-size:13px; word-break:break-all; }
+  .item .meta{ font-size:12px; color:var(--ink-soft); margin-top:6px; }
+  .acciones{ display:flex; gap:8px; align-items:flex-start; }
+  .acciones button{
+    font-family:'IBM Plex Mono',monospace; font-size:12px; padding:8px 14px; border-radius:6px;
+    border:1.5px solid var(--line); background:#fff; cursor:pointer;
+  }
+  .btn-aprobar{ border-color:#2B6A3D !important; color:#2B6A3D; }
+  .btn-rechazar{ border-color:#B33A57 !important; color:#B33A57; }
+
+  .vacio{ font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--ink-soft); }
+</style>
+</head>
+<body>
+
+<div id="login">
+  <h1 class="wordmark">Barat<span>i</span>to</h1>
+  <p style="color:var(--ink-soft); font-size:14px;">Panel de administración</p>
+  <input id="email" type="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Contraseña">
+  <button id="btn-login">Entrar</button>
+  <div class="error" id="login-error"></div>
+</div>
+
+<div id="panel">
+  <div class="header-row">
+    <h1 class="wordmark">Barat<span>i</span>to <span style="color:var(--ink-soft); font-size:14px; font-weight:400;">/ admin</span></h1>
+    <button class="salir" id="btn-salir">Cerrar sesión</button>
+  </div>
+  <div id="lista"><p class="vacio">Cargando sugerencias…</p></div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://jcrpxrfjenjdgqtwkiyw.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpjcnB4cmZqZW5qZGdxdHdraXl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNzAzMDYsImV4cCI6MjA5MDg0NjMwNn0.eygcb6oGMkXRUXoJUCs_9B5yr5doF3LrQn9C1-eYHpE';
+
+  const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    db: { schema: 'baratito' },
+  });
+
+  const login = document.getElementById('login');
+  const panel = document.getElementById('panel');
+
+  async function mostrarSegunSesion(){
+    const { data: { session } } = await client.auth.getSession();
+    if (session) {
+      login.style.display = 'none';
+      panel.style.display = 'block';
+      cargarSugerencias();
+    } else {
+      login.style.display = 'block';
+      panel.style.display = 'none';
+    }
+  }
+
+  document.getElementById('btn-login').addEventListener('click', async () => {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const errorEl = document.getElementById('login-error');
+    errorEl.textContent = '';
+
+    const { error } = await client.auth.signInWithPassword({ email, password });
+    if (error) {
+      errorEl.textContent = 'No se pudo entrar: ' + error.message;
+      return;
+    }
+    mostrarSegunSesion();
+  });
+
+  document.getElementById('btn-salir').addEventListener('click', async () => {
+    await client.auth.signOut();
+    mostrarSegunSesion();
+  });
+
+  async function cargarSugerencias(){
+    const lista = document.getElementById('lista');
+    lista.innerHTML = '<p class="vacio">Cargando sugerencias…</p>';
+
+    const { data, error } = await client
+      .from('sugerencias')
+      .select('*')
+      .eq('estado', 'pendiente')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      lista.innerHTML = `<p class="vacio">Error cargando sugerencias: ${error.message}</p>`;
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      lista.innerHTML = '<p class="vacio">No hay sugerencias pendientes.</p>';
+      return;
+    }
+
+    lista.innerHTML = '';
+    for (const s of data) {
+      const fecha = new Date(s.created_at).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' });
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.innerHTML = `
+        <div>
+          <h3>${s.nombre_negocio}</h3>
+          <a href="${s.url_pagina}" target="_blank" rel="noopener">${s.url_pagina}</a>
+          <div class="meta">${s.rubro || 'sin rubro'} · ${s.contacto || 'sin contacto'} · ${fecha}</div>
+        </div>
+        <div class="acciones">
+          <button class="btn-aprobar" data-id="${s.id}" data-accion="aprobar">Aprobar</button>
+          <button class="btn-rechazar" data-id="${s.id}" data-accion="rechazar">Rechazar</button>
+        </div>
+      `;
+      lista.appendChild(div);
+    }
+
+    lista.querySelectorAll('button[data-accion]').forEach((btn) => {
+      btn.addEventListener('click', () => manejarAccion(btn.dataset.id, btn.dataset.accion, data));
+    });
+  }
+
+  async function manejarAccion(id, accion, sugerenciasActuales){
+    const sugerencia = sugerenciasActuales.find((s) => s.id === id);
+
+    try {
+      if (accion === 'aprobar') {
+        const urlBase = new URL(sugerencia.url_pagina).origin;
+
+        const { data: proveedor, error: errProveedor } = await client
+          .from('proveedores')
+          .insert({
+            nombre: sugerencia.nombre_negocio,
+            url_base: urlBase,
+            rubro: sugerencia.rubro || 'general',
+          })
+          .select('id')
+          .single();
+
+        if (errProveedor) throw errProveedor;
+
+        const { error: errPagina } = await client
+          .from('paginas')
+          .insert({ proveedor_id: proveedor.id, url: sugerencia.url_pagina });
+
+        if (errPagina) throw errPagina;
+      }
+
+      const { error: errUpdate } = await client
+        .from('sugerencias')
+        .update({ estado: accion === 'aprobar' ? 'aprobado' : 'rechazado' })
+        .eq('id', id);
+
+      if (errUpdate) throw errUpdate;
+
+      cargarSugerencias();
+    } catch (err) {
+      alert('Error: ' + (err.message || err));
+    }
+  }
+
+  mostrarSegunSesion();
+</script>
+</body>
+</html>
