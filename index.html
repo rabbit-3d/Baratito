@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Baratito — precios de filamento 3D</title>
-<meta name="description" content="Comparador de precios de filamento 3D en MercadoLibre">
+<title>Baratito — comparador de proveedores</title>
+<meta name="description" content="Comparador de precios entre proveedores">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
@@ -15,79 +15,26 @@
     --ink:#1C1B17;
     --ink-soft:#6E6C63;
     --line:#DEDBD1;
-    --pla:#E8622C;    /* naranja filamento PLA */
-    --petg:#1E8F86;   /* verde azulado PETG */
-    --abs:#6E5AD6;    /* violeta ABS */
-    --tpu:#C13F79;    /* magenta TPU */
-    --default-accent:#3D3B33;
+    --accent:#E8622C;
   }
   *{box-sizing:border-box;}
-  body{
-    margin:0;
-    background:var(--paper);
-    color:var(--ink);
-    font-family:'Inter',system-ui,sans-serif;
-    -webkit-font-smoothing:antialiased;
-  }
-  a{color:inherit;}
-  :focus-visible{outline:2px solid var(--ink); outline-offset:2px;}
+  body{ margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
+  a{ color:inherit; }
+  :focus-visible{ outline:2px solid var(--ink); outline-offset:2px; }
 
-  header{
-    padding:48px 24px 28px;
-    max-width:1080px;
-    margin:0 auto;
-  }
-  .wordmark{
-    font-family:'Space Grotesk',sans-serif;
-    font-weight:700;
-    font-size:clamp(32px,6vw,48px);
-    letter-spacing:-0.02em;
-    margin:0;
-  }
-  .wordmark span{ color:var(--pla); }
-  .tagline{
-    margin:8px 0 0;
-    color:var(--ink-soft);
-    font-size:15px;
-  }
+  header{ padding:48px 24px 28px; max-width:1080px; margin:0 auto; }
+  .wordmark{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:clamp(32px,6vw,48px); letter-spacing:-0.02em; margin:0; }
+  .wordmark span{ color:var(--accent); }
+  .tagline{ margin:8px 0 0; color:var(--ink-soft); font-size:15px; }
 
-  .toolbar{
-    max-width:1080px;
-    margin:0 auto;
-    padding:0 24px 24px;
-    display:flex;
-    gap:12px;
-    flex-wrap:wrap;
-    align-items:center;
-  }
-  #buscador{
-    flex:1;
-    min-width:220px;
-    padding:12px 16px;
-    border:1.5px solid var(--line);
-    border-radius:8px;
-    background:#fff;
-    font-family:'Inter',sans-serif;
-    font-size:14px;
-    color:var(--ink);
-  }
+  .toolbar{ max-width:1080px; margin:0 auto; padding:0 24px 24px; display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+  #buscador{ flex:1; min-width:220px; padding:12px 16px; border:1.5px solid var(--line); border-radius:8px; background:#fff; font-family:'Inter',sans-serif; font-size:14px; color:var(--ink); }
   #buscador::placeholder{ color:var(--ink-soft); }
-  .estado{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:12px;
-    color:var(--ink-soft);
-  }
+  .estado{ font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft); }
 
-  /* Divisor tipo cinta métrica: la "firma" visual de la página */
-  .regla{
-    max-width:1080px;
-    margin:0 auto;
-    padding:0 24px;
-  }
+  .regla{ max-width:1080px; margin:0 auto; padding:0 24px; }
   .regla::before{
-    content:'';
-    display:block;
-    height:14px;
+    content:''; display:block; height:14px;
     background-image:
       repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 8px),
       repeating-linear-gradient(90deg, var(--ink-soft) 0 1px, transparent 1px 40px);
@@ -95,194 +42,70 @@
     opacity:0.6;
   }
 
-  main{
-    max-width:1080px;
-    margin:0 auto;
-    padding:24px;
-  }
+  main{ max-width:1080px; margin:0 auto; padding:24px; }
 
-  .material{
-    margin-bottom:48px;
-  }
-  .material-header{
-    display:flex;
-    align-items:baseline;
-    justify-content:space-between;
-    gap:12px;
-    margin-bottom:16px;
-    padding-bottom:8px;
-    border-bottom:2px solid var(--accent, var(--default-accent));
-  }
-  .material-header h2{
-    font-family:'Space Grotesk',sans-serif;
-    font-size:20px;
-    font-weight:700;
-    margin:0;
-    text-transform:capitalize;
-  }
-  .material-header .conteo{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:12px;
-    color:var(--ink-soft);
-  }
-
-  .grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
-    gap:14px;
-  }
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; }
 
   .card{
-    background:#fff;
-    border:1.5px solid var(--line);
-    border-radius:10px;
-    padding:16px;
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-    position:relative;
-    transition:transform 0.15s ease, border-color 0.15s ease;
+    background:#fff; border:1.5px solid var(--line); border-radius:10px; padding:16px;
+    display:flex; flex-direction:column; gap:8px; transition:transform 0.15s ease, border-color 0.15s ease;
   }
-  .card:hover{
-    border-color:var(--accent, var(--default-accent));
-    transform:translateY(-2px);
-  }
-  .card.mas-barato{
-    border-color:var(--accent, var(--default-accent));
-    border-width:2px;
-  }
-  .tag-barato{
-    position:absolute;
-    top:-10px;
-    right:12px;
-    background:var(--accent, var(--default-accent));
-    color:#fff;
-    font-family:'IBM Plex Mono',monospace;
-    font-size:10px;
-    letter-spacing:0.04em;
-    text-transform:uppercase;
-    padding:3px 8px;
-    border-radius:999px;
+  .card:hover{ border-color:var(--accent); transform:translateY(-2px); }
+  .card .proveedor{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:var(--accent);
   }
   .card .titulo{
-    font-size:13px;
-    line-height:1.4;
-    color:var(--ink);
-    text-decoration:none;
-    font-weight:500;
-    display:-webkit-box;
-    -webkit-line-clamp:2;
-    -webkit-box-orient:vertical;
-    overflow:hidden;
+    font-size:13px; line-height:1.4; color:var(--ink); text-decoration:none; font-weight:500;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
   }
   .card .titulo:hover{ text-decoration:underline; }
-  .precio{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:26px;
-    font-weight:500;
-    margin:2px 0 0;
-  }
-  .precio .moneda{
-    font-size:13px;
-    color:var(--ink-soft);
-    margin-right:2px;
-  }
-  .meta-row{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    font-size:12px;
-    color:var(--ink-soft);
-  }
-  .sparkline{
-    align-self:flex-end;
-  }
+  .precios{ display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+  .precio{ font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:500; }
+  .precio-efectivo{ font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--ink-soft); }
+  .precio-efectivo b{ color:var(--accent); }
 
-  .vacio, .error{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:13px;
-    color:var(--ink-soft);
-    padding:24px 0;
-  }
-  .error{ color:var(--tpu); }
+  .vacio, .error{ font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--ink-soft); padding:24px 0; }
+  .error{ color:#C13F79; }
 
-  footer{
-    max-width:1080px;
-    margin:0 auto;
-    padding:24px 24px 60px;
-    font-size:12px;
-    color:var(--ink-soft);
-  }
+  footer{ max-width:1080px; margin:0 auto; padding:24px 24px 60px; font-size:12px; color:var(--ink-soft); }
 
-  @media (max-width:480px){
-    .grid{ grid-template-columns:1fr 1fr; }
-  }
+  @media (max-width:480px){ .grid{ grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
 
 <header>
   <h1 class="wordmark">Barat<span>i</span>to</h1>
-  <p class="tagline">Precios de filamento 3D en MercadoLibre, actualizados cada 6 horas.</p>
+  <p class="tagline">Comparador de precios entre proveedores.</p>
 </header>
 
 <div class="toolbar">
-  <input id="buscador" type="text" placeholder="Filtrar por material, título o vendedor…" autocomplete="off">
+  <input id="buscador" type="text" placeholder="Buscá un producto (ej: cubierta 29, casco, cadena)…" autocomplete="off">
   <span class="estado" id="estado">cargando…</span>
 </div>
 <div class="regla"></div>
 
 <main id="contenido">
-  <p class="vacio">Cargando precios…</p>
+  <p class="vacio">Cargando productos…</p>
 </main>
 
 <footer>
-  Datos públicos de la API de MercadoLibre, guardados en Supabase por un cron de GitHub Actions.
+  Datos públicos de los sitios de cada proveedor, guardados por un cron de GitHub Actions.
   <span id="ultima-actualizacion"></span>
 </footer>
 
 <script>
   // ==========================================================================
-  // CONFIG — completar con los datos de tu proyecto de Supabase
-  // (Settings → API. Usar la "anon" key, NUNCA la service role key acá.)
+  // CONFIG — completar con los datos de tu proyecto de Supabase (Settings → API)
   // ==========================================================================
   const SUPABASE_URL = 'https://jcrpxrfjenjdgqtwkiyw.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpjcnB4cmZqZW5qZGdxdHdraXl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNzAzMDYsImV4cCI6MjA5MDg0NjMwNn0.eygcb6oGMkXRUXoJUCs_9B5yr5doF3LrQn9C1-eYHpE';
 
-  const ACCENTS = {
-    pla: 'var(--pla)',
-    petg: 'var(--petg)',
-    abs: 'var(--abs)',
-    tpu: 'var(--tpu)',
-  };
-
-  function accentPara(termino){
-    const t = termino.toLowerCase();
-    for (const key of Object.keys(ACCENTS)) {
-      if (t.includes(key)) return ACCENTS[key];
-    }
-    return null;
+  function formatearPrecio(precio){
+    return new Intl.NumberFormat('es-AR').format(Math.round(precio));
   }
 
-  function formatearPrecio(precio, moneda){
-    const numero = new Intl.NumberFormat('es-AR').format(Math.round(precio));
-    return `<span class="moneda">${moneda || 'ARS'}</span>${numero}`;
-  }
-
-  function sparklineSVG(valores, color){
-    if (!valores || valores.length < 2) return '';
-    const w = 80, h = 24, pad = 2;
-    const min = Math.min(...valores), max = Math.max(...valores);
-    const rango = max - min || 1;
-    const puntos = valores.map((v, i) => {
-      const x = pad + (i / (valores.length - 1)) * (w - pad * 2);
-      const y = h - pad - ((v - min) / rango) * (h - pad * 2);
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    }).join(' ');
-    return `<svg class="sparkline" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="Tendencia de precio">
-      <polyline points="${puntos}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>`;
-  }
+  let TODOS = [];
 
   async function cargarDatos(){
     const estado = document.getElementById('estado');
@@ -294,59 +117,48 @@
       });
 
       const [{ data: productos, error: errProductos }, { data: snapshots, error: errSnapshots }] = await Promise.all([
-        client.from('productos').select('id, titulo, permalink, seller_nickname, busqueda_id, busquedas(termino)'),
-        client.from('snapshots').select('producto_id, precio, moneda, captured_at').order('captured_at', { ascending: false }).limit(3000),
+        client.from('productos').select('id, titulo, url, proveedor_id, proveedores(nombre)'),
+        client.from('snapshots').select('producto_id, precio, precio_efectivo, captured_at').order('captured_at', { ascending: false }).limit(5000),
       ]);
 
       if (errProductos) throw errProductos;
       if (errSnapshots) throw errSnapshots;
 
-      // Agrupar snapshots por producto (ya vienen ordenados del más nuevo al más viejo)
-      const historialPorProducto = new Map();
+      const ultimoPorProducto = new Map();
       for (const s of snapshots) {
-        if (!historialPorProducto.has(s.producto_id)) historialPorProducto.set(s.producto_id, []);
-        historialPorProducto.get(s.producto_id).push(s);
+        if (!ultimoPorProducto.has(s.producto_id)) ultimoPorProducto.set(s.producto_id, s);
       }
 
-      // Armar productos con su último precio + mini historial (más viejo -> más nuevo para el sparkline)
-      const productosConPrecio = productos
+      TODOS = productos
         .map((p) => {
-          const historial = historialPorProducto.get(p.id) || [];
-          if (historial.length === 0) return null;
-          const ultimo = historial[0];
-          const serie = historial.slice(0, 10).reverse().map((s) => s.precio);
+          const ultimo = ultimoPorProducto.get(p.id);
+          if (!ultimo) return null;
           return {
-            ...p,
-            termino: p.busquedas?.termino || 'otros',
+            titulo: p.titulo,
+            url: p.url,
+            proveedor: p.proveedores?.nombre || 'Proveedor',
             precio: ultimo.precio,
-            moneda: ultimo.moneda,
-            serie,
+            precio_efectivo: ultimo.precio_efectivo,
           };
         })
         .filter(Boolean);
 
-      renderizar(productosConPrecio);
-
       const ahora = new Date().toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' });
       document.getElementById('ultima-actualizacion').textContent = ` · vista generada ${ahora}`;
-      estado.textContent = `${productosConPrecio.length} publicaciones`;
+      estado.textContent = `${TODOS.length} productos`;
+
+      renderizar(TODOS);
 
       document.getElementById('buscador').addEventListener('input', (e) => {
         const q = e.target.value.trim().toLowerCase();
-        const filtrados = q
-          ? productosConPrecio.filter((p) =>
-              p.titulo.toLowerCase().includes(q) ||
-              p.termino.toLowerCase().includes(q) ||
-              (p.seller_nickname || '').toLowerCase().includes(q)
-            )
-          : productosConPrecio;
+        const filtrados = q ? TODOS.filter((p) => p.titulo.toLowerCase().includes(q)) : TODOS;
         renderizar(filtrados);
       });
 
     } catch (err) {
       console.error(err);
       estado.textContent = 'error';
-      contenido.innerHTML = `<p class="error">No se pudo conectar a Supabase. Revisá SUPABASE_URL y SUPABASE_ANON_KEY en el &lt;script&gt; de este archivo.<br>(${err.message || err})</p>`;
+      contenido.innerHTML = `<p class="error">No se pudo conectar a Supabase. (${err.message || err})</p>`;
     }
   }
 
@@ -354,45 +166,26 @@
     const contenido = document.getElementById('contenido');
 
     if (productos.length === 0) {
-      contenido.innerHTML = '<p class="vacio">Sin resultados. Probá con otro término, o esperá a que corra el próximo cron.</p>';
+      contenido.innerHTML = '<p class="vacio">Sin resultados. Probá con otro término.</p>';
       return;
     }
 
-    const porTermino = new Map();
-    for (const p of productos) {
-      if (!porTermino.has(p.termino)) porTermino.set(p.termino, []);
-      porTermino.get(p.termino).push(p);
-    }
+    const ordenados = [...productos].sort((a, b) => a.precio - b.precio);
 
-    let html = '';
-    for (const [termino, items] of porTermino) {
-      items.sort((a, b) => a.precio - b.precio);
-      const accent = accentPara(termino);
-      const masBaratoId = items[0].id;
-
-      html += `<section class="material" style="${accent ? `--accent:${accent}` : ''}">
-        <div class="material-header">
-          <h2>${termino}</h2>
-          <span class="conteo">${items.length} vendedores</span>
+    let html = '<div class="grid">';
+    for (const p of ordenados) {
+      html += `<article class="card">
+        <span class="proveedor">${p.proveedor}</span>
+        <a class="titulo" href="${p.url}" target="_blank" rel="noopener">${p.titulo}</a>
+        <div class="precios">
+          <span class="precio">$${formatearPrecio(p.precio)}</span>
         </div>
-        <div class="grid">`;
-
-      for (const p of items) {
-        const esMasBarato = p.id === masBaratoId;
-        const colorLinea = accent || 'var(--default-accent)';
-        html += `<article class="card ${esMasBarato ? 'mas-barato' : ''}">
-          ${esMasBarato ? '<span class="tag-barato">más barato</span>' : ''}
-          <a class="titulo" href="${p.permalink}" target="_blank" rel="noopener">${p.titulo}</a>
-          <p class="precio">${formatearPrecio(p.precio, p.moneda)}</p>
-          <div class="meta-row">
-            <span>${p.seller_nickname || 'vendedor s/d'}</span>
-            ${sparklineSVG(p.serie, colorLinea)}
-          </div>
-        </article>`;
-      }
-
-      html += `</div></section>`;
+        ${p.precio_efectivo && p.precio_efectivo < p.precio
+          ? `<span class="precio-efectivo">contado/transferencia: <b>$${formatearPrecio(p.precio_efectivo)}</b></span>`
+          : ''}
+      </article>`;
     }
+    html += '</div>';
 
     contenido.innerHTML = html;
   }
