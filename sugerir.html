@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Baratito — sumá tu negocio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{
+    --paper:#F6F5F0;
+    --ink:#1C1B17;
+    --ink-soft:#6E6C63;
+    --line:#DEDBD1;
+    --accent:#E8622C;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',system-ui,sans-serif; }
+  a{ color:var(--accent); }
+
+  main{ max-width:520px; margin:0 auto; padding:48px 24px 80px; }
+  .wordmark{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:32px; margin:0 0 4px; }
+  .wordmark span{ color:var(--accent); }
+  h1{ font-family:'Space Grotesk',sans-serif; font-size:20px; margin:24px 0 8px; }
+  p.intro{ color:var(--ink-soft); font-size:14px; line-height:1.5; margin-bottom:28px; }
+
+  label{ display:block; font-size:13px; font-weight:500; margin:16px 0 6px; }
+  label .opcional{ font-weight:400; color:var(--ink-soft); }
+  input, select{
+    width:100%; padding:11px 14px; border:1.5px solid var(--line); border-radius:8px;
+    background:#fff; font-family:'Inter',sans-serif; font-size:14px; color:var(--ink);
+  }
+  .ayuda{ font-size:12px; color:var(--ink-soft); margin-top:4px; }
+
+  button{
+    margin-top:24px; width:100%; padding:13px; border:none; border-radius:8px;
+    background:var(--ink); color:#fff; font-family:'Inter',sans-serif; font-size:14px; font-weight:500;
+    cursor:pointer;
+  }
+  button:disabled{ opacity:0.5; cursor:default; }
+
+  .mensaje{ margin-top:20px; padding:14px 16px; border-radius:8px; font-size:14px; line-height:1.5; }
+  .mensaje.ok{ background:#EAF3EC; color:#2B6A3D; }
+  .mensaje.error{ background:#FBEAEE; color:#B33A57; }
+
+  .volver{ display:inline-block; margin-top:32px; font-size:13px; color:var(--ink-soft); text-decoration:none; }
+</style>
+</head>
+<body>
+<main>
+  <h2 class="wordmark">Barat<span>i</span>to</h2>
+
+  <h1>¿Querés que tu negocio esté acá?</h1>
+  <p class="intro">
+    Contanos el sitio de tu negocio o de tu proveedor con precios públicos, y lo revisamos para sumarlo
+    al comparador. No hace falta que sea nada técnico — con la URL alcanza.
+  </p>
+
+  <form id="form-sugerencia">
+    <label for="nombre">Nombre del negocio</label>
+    <input id="nombre" type="text" required placeholder="Ej: Bicicletería Pico">
+
+    <label for="url">Link a una página con productos y precios visibles</label>
+    <input id="url" type="url" required placeholder="https://tunegocio.com/productos">
+    <p class="ayuda">Puede ser una categoría, el catálogo completo, o incluso el inicio, mientras muestre varios productos con precio.</p>
+
+    <label for="rubro">Rubro <span class="opcional">(opcional)</span></label>
+    <input id="rubro" type="text" placeholder="Ej: bicicletería, dietética, supermercado">
+
+    <label for="contacto">Tu contacto <span class="opcional">(opcional, por si hay que consultarte algo)</span></label>
+    <input id="contacto" type="text" placeholder="Email, WhatsApp o Instagram">
+
+    <button id="btn-enviar" type="submit">Enviar</button>
+  </form>
+
+  <div id="resultado"></div>
+
+  <a class="volver" href="index.html">← Volver al comparador</a>
+</main>
+
+<script>
+  const SUPABASE_URL = 'https://jcrpxrfjenjdgqtwkiyw.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpjcnB4cmZqZW5qZGdxdHdraXl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNzAzMDYsImV4cCI6MjA5MDg0NjMwNn0.eygcb6oGMkXRUXoJUCs_9B5yr5doF3LrQn9C1-eYHpE';
+
+  const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    db: { schema: 'baratito' },
+  });
+
+  const form = document.getElementById('form-sugerencia');
+  const boton = document.getElementById('btn-enviar');
+  const resultado = document.getElementById('resultado');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    boton.disabled = true;
+    boton.textContent = 'Enviando…';
+    resultado.innerHTML = '';
+
+    const nombre_negocio = document.getElementById('nombre').value.trim();
+    const url_pagina = document.getElementById('url').value.trim();
+    const rubro = document.getElementById('rubro').value.trim() || null;
+    const contacto = document.getElementById('contacto').value.trim() || null;
+
+    try {
+      const { error } = await client.from('sugerencias').insert({
+        nombre_negocio,
+        url_pagina,
+        rubro,
+        contacto,
+      });
+
+      if (error) throw error;
+
+      resultado.innerHTML = '<div class="mensaje ok">¡Gracias! Lo vamos a revisar y, si el sitio se puede leer bien, lo sumamos al comparador pronto.</div>';
+      form.reset();
+    } catch (err) {
+      console.error(err);
+      resultado.innerHTML = `<div class="mensaje error">No se pudo enviar. Probá de nuevo en un rato. (${err.message || err})</div>`;
+    } finally {
+      boton.disabled = false;
+      boton.textContent = 'Enviar';
+    }
+  });
+</script>
+</body>
+</html>
