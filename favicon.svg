@@ -1,0 +1,8 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <rect width="64" height="64" rx="14" fill="#1C1B17"/>
+  <text x="32" y="34" text-anchor="middle" dominant-baseline="central"
+        font-family="'Space Grotesk','Arial Black',sans-serif" font-weight="700"
+        font-size="34" fill="#F6F5F0">B</text>
+  <rect x="18" y="46" width="10" height="6" rx="2" fill="#E8622C"/>
+  <rect x="30" y="46" width="10" height="6" rx="2" fill="#F6F5F0" opacity="0.25"/>
+</svg>
