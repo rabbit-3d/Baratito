@@ -23,24 +23,47 @@
   a{ color:inherit; }
   :focus-visible{ outline:2px solid var(--ink); outline-offset:2px; }
 
-  header{ padding:48px 24px 28px; max-width:1080px; margin:0 auto; }
+  header{ padding:48px 24px 28px; max-width:1200px; margin:0 auto; display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
   .wordmark{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:clamp(32px,6vw,48px); letter-spacing:-0.02em; margin:0; }
   .wordmark span{ color:var(--accent); }
   .tagline{ margin:8px 0 0; color:var(--ink-soft); font-size:15px; }
 
-  .toolbar{ max-width:1080px; margin:0 auto; padding:0 24px 24px; display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+  .auth-area{ position:relative; padding-top:8px; }
+  .btn-auth{
+    font-family:'IBM Plex Mono',monospace; font-size:12px; padding:8px 14px; border-radius:999px;
+    border:1.5px solid var(--line); background:#fff; color:var(--ink-soft); cursor:pointer;
+  }
+  .btn-auth.admin{ border-color:var(--accent); color:var(--accent); text-decoration:none; }
+  .auth-logueado{ display:flex; gap:8px; align-items:center; }
+
+  .form-login{
+    position:absolute; top:calc(100% + 8px); right:0; z-index:10;
+    background:#fff; border:1.5px solid var(--line); border-radius:10px; padding:16px;
+    width:220px; display:none; flex-direction:column; gap:8px;
+  }
+  .form-login.abierto{ display:flex; }
+  .form-login input{
+    padding:9px 12px; border:1.5px solid var(--line); border-radius:6px; font-size:13px; font-family:'Inter',sans-serif;
+  }
+  .form-login button{
+    padding:9px; border:none; border-radius:6px; background:var(--ink); color:#fff;
+    font-family:'Inter',sans-serif; font-size:13px; cursor:pointer;
+  }
+  .form-login .error{ font-size:11px; color:#B33A57; }
+
+  .toolbar{ max-width:1200px; margin:0 auto; padding:0 24px 24px; display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
   #buscador{ flex:1; min-width:220px; padding:12px 16px; border:1.5px solid var(--line); border-radius:8px; background:#fff; font-family:'Inter',sans-serif; font-size:14px; color:var(--ink); }
   #buscador::placeholder{ color:var(--ink-soft); }
   .estado{ font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft); }
 
-  .filtros{ max-width:1080px; margin:0 auto; padding:0 24px 16px; display:flex; gap:8px; flex-wrap:wrap; }
+  .filtros{ max-width:1200px; margin:0 auto; padding:0 24px 16px; display:flex; gap:8px; flex-wrap:wrap; }
   .chip{
     font-family:'IBM Plex Mono',monospace; font-size:12px; padding:6px 12px; border-radius:999px;
     border:1.5px solid var(--line); background:#fff; color:var(--ink-soft); cursor:pointer;
   }
   .chip.activo{ border-color:var(--accent); color:var(--accent); background:#fff; }
 
-  .regla{ max-width:1080px; margin:0 auto; padding:0 24px; }
+  .regla{ max-width:1200px; margin:0 auto; padding:0 24px; }
   .regla::before{
     content:''; display:block; height:14px;
     background-image:
@@ -50,9 +73,19 @@
     opacity:0.6;
   }
 
-  main{ max-width:1080px; margin:0 auto; padding:24px; }
+  main{ max-width:1200px; margin:0 auto; padding:24px; }
 
-  .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; }
+  .grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:14px; }
+  @media (max-width:960px){ .grid{ grid-template-columns:repeat(3,1fr); } }
+  @media (max-width:640px){ .grid{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:420px){ .grid{ grid-template-columns:1fr; } }
+
+  .ver-mas-wrap{ display:flex; justify-content:center; margin-top:24px; }
+  .btn-ver-mas{
+    font-family:'IBM Plex Mono',monospace; font-size:13px; padding:11px 24px; border-radius:999px;
+    border:1.5px solid var(--line); background:#fff; color:var(--ink); cursor:pointer;
+  }
+  .btn-ver-mas:hover{ border-color:var(--accent); color:var(--accent); }
 
   .card{
     background:#fff; border:1.5px solid var(--line); border-radius:10px; padding:16px;
@@ -83,10 +116,10 @@
   .vacio, .error{ font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--ink-soft); padding:24px 0; }
   .error{ color:#C13F79; }
 
-  footer{ max-width:1080px; margin:0 auto; padding:24px 24px 60px; font-size:12px; color:var(--ink-soft); }
+  footer{ max-width:1200px; margin:0 auto; padding:24px 24px 60px; font-size:12px; color:var(--ink-soft); }
 
   .cta{
-    max-width:1080px; margin:8px auto 0; padding:20px 24px; display:flex; align-items:center;
+    max-width:1200px; margin:8px auto 0; padding:20px 24px; display:flex; align-items:center;
     justify-content:space-between; gap:16px; flex-wrap:wrap;
     border-top:1.5px solid var(--line); border-bottom:1.5px solid var(--line);
   }
@@ -102,8 +135,20 @@
 <body>
 
 <header>
-  <h1 class="wordmark">Barat<span>i</span>to</h1>
-  <p class="tagline">Comparador de precios entre proveedores.</p>
+  <div>
+    <h1 class="wordmark">Barat<span>i</span>to</h1>
+    <p class="tagline">Comparador de precios entre proveedores.</p>
+  </div>
+
+  <div class="auth-area" id="auth-area">
+    <button class="btn-auth" id="btn-abrir-login">Iniciar sesión</button>
+    <div class="form-login" id="form-login">
+      <input id="login-email" type="email" placeholder="Email">
+      <input id="login-password" type="password" placeholder="Contraseña">
+      <button id="btn-login">Entrar</button>
+      <span class="error" id="login-error"></span>
+    </div>
+  </div>
 </header>
 
 <div class="toolbar">
@@ -134,12 +179,20 @@
   const SUPABASE_URL = 'https://jcrpxrfjenjdgqtwkiyw.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpjcnB4cmZqZW5qZGdxdHdraXl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNzAzMDYsImV4cCI6MjA5MDg0NjMwNn0.eygcb6oGMkXRUXoJUCs_9B5yr5doF3LrQn9C1-eYHpE';
 
+  const ADMIN_EMAIL = 'mateoduarte02@gmail.com';
+
+  const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    db: { schema: 'baratito' },
+  });
+
   function formatearPrecio(precio){
     return new Intl.NumberFormat('es-AR').format(Math.round(precio));
   }
 
   let TODOS = [];
   let PROVEEDORES_ACTIVOS = null; // null = todos
+  const TANDA = 25; // 5 columnas x 5 filas
+  let CANTIDAD_VISIBLE = TANDA;
 
   function aplicarFiltros(){
     const q = document.getElementById('buscador').value.trim().toLowerCase();
@@ -150,6 +203,7 @@
     if (q) {
       filtrados = filtrados.filter((p) => p.titulo.toLowerCase().includes(q));
     }
+    CANTIDAD_VISIBLE = TANDA; // cada vez que cambia el filtro, arrancamos de nuevo
     renderizar(filtrados);
   }
 
@@ -185,10 +239,6 @@
     const contenido = document.getElementById('contenido');
 
     try {
-      const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-        db: { schema: 'baratito' },
-      });
-
       const [{ data: productos, error: errProductos }, { data: snapshots, error: errSnapshots }] = await Promise.all([
         client.from('productos').select('id, titulo, url, imagen_url, proveedor_id, proveedores(nombre)'),
         client.from('snapshots').select('producto_id, precio, precio_efectivo, captured_at').order('captured_at', { ascending: false }).limit(5000),
@@ -242,9 +292,10 @@
     }
 
     const ordenados = [...productos].sort((a, b) => a.precio - b.precio);
+    const visibles = ordenados.slice(0, CANTIDAD_VISIBLE);
 
     let html = '<div class="grid">';
-    for (const p of ordenados) {
+    for (const p of visibles) {
       html += `<article class="card">
         ${p.imagen_url
           ? `<img class="foto" src="${p.imagen_url}" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'foto-vacia',textContent:'sin foto'}))">`
@@ -261,9 +312,76 @@
     }
     html += '</div>';
 
+    if (ordenados.length > visibles.length) {
+      html += `<div class="ver-mas-wrap"><button class="btn-ver-mas" id="btn-ver-mas">Ver más (${ordenados.length - visibles.length} más)</button></div>`;
+    }
+
     contenido.innerHTML = html;
+
+    const btnVerMas = document.getElementById('btn-ver-mas');
+    if (btnVerMas) {
+      btnVerMas.addEventListener('click', () => {
+        CANTIDAD_VISIBLE += TANDA;
+        renderizar(productos);
+      });
+    }
   }
 
+  // ==========================================================================
+  // LOGIN / ROL DE ADMIN
+  // ==========================================================================
+  const authArea = document.getElementById('auth-area');
+
+  function pintarAuth(session){
+    const esAdmin = session && session.user.email === ADMIN_EMAIL;
+
+    if (session) {
+      authArea.innerHTML = `
+        <div class="auth-logueado">
+          ${esAdmin ? '<a class="btn-auth admin" href="admin.html">Panel admin</a>' : ''}
+          <button class="btn-auth" id="btn-logout">Cerrar sesión</button>
+        </div>
+      `;
+      document.getElementById('btn-logout').addEventListener('click', async () => {
+        await client.auth.signOut();
+        pintarAuth(null);
+      });
+    } else {
+      authArea.innerHTML = `
+        <button class="btn-auth" id="btn-abrir-login">Iniciar sesión</button>
+        <div class="form-login" id="form-login">
+          <input id="login-email" type="email" placeholder="Email">
+          <input id="login-password" type="password" placeholder="Contraseña">
+          <button id="btn-login">Entrar</button>
+          <span class="error" id="login-error"></span>
+        </div>
+      `;
+      const form = document.getElementById('form-login');
+      document.getElementById('btn-abrir-login').addEventListener('click', () => {
+        form.classList.toggle('abierto');
+      });
+      document.getElementById('btn-login').addEventListener('click', async () => {
+        const email = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value;
+        const errorEl = document.getElementById('login-error');
+        errorEl.textContent = '';
+
+        const { data, error } = await client.auth.signInWithPassword({ email, password });
+        if (error) {
+          errorEl.textContent = 'Email o contraseña incorrectos.';
+          return;
+        }
+        pintarAuth(data.session);
+      });
+    }
+  }
+
+  async function iniciarAuth(){
+    const { data: { session } } = await client.auth.getSession();
+    pintarAuth(session);
+  }
+
+  iniciarAuth();
   cargarDatos();
 </script>
 </body>

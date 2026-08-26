@@ -64,7 +64,10 @@
 <div id="panel">
   <div class="header-row">
     <h1 class="wordmark">Barat<span>i</span>to <span style="color:var(--ink-soft); font-size:14px; font-weight:400;">/ admin</span></h1>
-    <button class="salir" id="btn-salir">Cerrar sesión</button>
+    <div style="display:flex; gap:8px;">
+      <a class="salir" href="index.html" style="text-decoration:none; border:1.5px solid var(--line); padding:6px 12px; border-radius:6px;">← Volver a la página</a>
+      <button class="salir" id="btn-salir">Cerrar sesión</button>
+    </div>
   </div>
   <div id="lista"><p class="vacio">Cargando sugerencias…</p></div>
 </div>
@@ -80,13 +83,16 @@
   const login = document.getElementById('login');
   const panel = document.getElementById('panel');
 
+  const ADMIN_EMAIL = 'mateoduarte02@gmail.com';
+
   async function mostrarSegunSesion(){
     const { data: { session } } = await client.auth.getSession();
-    if (session) {
+    if (session && session.user.email === ADMIN_EMAIL) {
       login.style.display = 'none';
       panel.style.display = 'block';
       cargarSugerencias();
     } else {
+      if (session) await client.auth.signOut(); // logueado pero no es el admin
       login.style.display = 'block';
       panel.style.display = 'none';
     }
