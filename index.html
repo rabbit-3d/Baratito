@@ -32,6 +32,13 @@
   #buscador::placeholder{ color:var(--ink-soft); }
   .estado{ font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft); }
 
+  .filtros{ max-width:1080px; margin:0 auto; padding:0 24px 16px; display:flex; gap:8px; flex-wrap:wrap; }
+  .chip{
+    font-family:'IBM Plex Mono',monospace; font-size:12px; padding:6px 12px; border-radius:999px;
+    border:1.5px solid var(--line); background:#fff; color:var(--ink-soft); cursor:pointer;
+  }
+  .chip.activo{ border-color:var(--accent); color:var(--accent); background:#fff; }
+
   .regla{ max-width:1080px; margin:0 auto; padding:0 24px; }
   .regla::before{
     content:''; display:block; height:14px;
@@ -51,6 +58,14 @@
     display:flex; flex-direction:column; gap:8px; transition:transform 0.15s ease, border-color 0.15s ease;
   }
   .card:hover{ border-color:var(--accent); transform:translateY(-2px); }
+  .card .foto{
+    width:100%; height:140px; object-fit:contain; border-radius:6px; background:var(--paper);
+  }
+  .card .foto-vacia{
+    width:100%; height:140px; border-radius:6px; background:var(--paper);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft);
+  }
   .card .proveedor{
     font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:var(--accent);
   }
@@ -83,6 +98,7 @@
   <input id="buscador" type="text" placeholder="Buscá un producto (ej: cubierta 29, casco, cadena)…" autocomplete="off">
   <span class="estado" id="estado">cargando…</span>
 </div>
+<div class="filtros" id="filtros"></div>
 <div class="regla"></div>
 
 <main id="contenido">
@@ -106,6 +122,46 @@
   }
 
   let TODOS = [];
+  let PROVEEDORES_ACTIVOS = null; // null = todos
+
+  function aplicarFiltros(){
+    const q = document.getElementById('buscador').value.trim().toLowerCase();
+    let filtrados = TODOS;
+    if (PROVEEDORES_ACTIVOS) {
+      filtrados = filtrados.filter((p) => PROVEEDORES_ACTIVOS.has(p.proveedor));
+    }
+    if (q) {
+      filtrados = filtrados.filter((p) => p.titulo.toLowerCase().includes(q));
+    }
+    renderizar(filtrados);
+  }
+
+  function renderizarChips(){
+    const nombres = [...new Set(TODOS.map((p) => p.proveedor))].sort();
+    const contenedor = document.getElementById('filtros');
+
+    const chipTodos = document.createElement('button');
+    chipTodos.className = 'chip' + (PROVEEDORES_ACTIVOS === null ? ' activo' : '');
+    chipTodos.textContent = 'Todos';
+    chipTodos.onclick = () => { PROVEEDORES_ACTIVOS = null; renderizarChips(); aplicarFiltros(); };
+    contenedor.innerHTML = '';
+    contenedor.appendChild(chipTodos);
+
+    for (const nombre of nombres) {
+      const activo = PROVEEDORES_ACTIVOS !== null && PROVEEDORES_ACTIVOS.has(nombre);
+      const chip = document.createElement('button');
+      chip.className = 'chip' + (activo ? ' activo' : '');
+      chip.textContent = nombre;
+      chip.onclick = () => {
+        const actuales = PROVEEDORES_ACTIVOS ? new Set(PROVEEDORES_ACTIVOS) : new Set();
+        if (actuales.has(nombre)) actuales.delete(nombre); else actuales.add(nombre);
+        PROVEEDORES_ACTIVOS = actuales.size === 0 ? null : actuales;
+        renderizarChips();
+        aplicarFiltros();
+      };
+      contenedor.appendChild(chip);
+    }
+  }
 
   async function cargarDatos(){
     const estado = document.getElementById('estado');
@@ -117,7 +173,7 @@
       });
 
       const [{ data: productos, error: errProductos }, { data: snapshots, error: errSnapshots }] = await Promise.all([
-        client.from('productos').select('id, titulo, url, proveedor_id, proveedores(nombre)'),
+        client.from('productos').select('id, titulo, url, imagen_url, proveedor_id, proveedores(nombre)'),
         client.from('snapshots').select('producto_id, precio, precio_efectivo, captured_at').order('captured_at', { ascending: false }).limit(5000),
       ]);
 
@@ -136,6 +192,7 @@
           return {
             titulo: p.titulo,
             url: p.url,
+            imagen_url: p.imagen_url,
             proveedor: p.proveedores?.nombre || 'Proveedor',
             precio: ultimo.precio,
             precio_efectivo: ultimo.precio_efectivo,
@@ -147,13 +204,10 @@
       document.getElementById('ultima-actualizacion').textContent = ` · vista generada ${ahora}`;
       estado.textContent = `${TODOS.length} productos`;
 
+      renderizarChips();
       renderizar(TODOS);
 
-      document.getElementById('buscador').addEventListener('input', (e) => {
-        const q = e.target.value.trim().toLowerCase();
-        const filtrados = q ? TODOS.filter((p) => p.titulo.toLowerCase().includes(q)) : TODOS;
-        renderizar(filtrados);
-      });
+      document.getElementById('buscador').addEventListener('input', aplicarFiltros);
 
     } catch (err) {
       console.error(err);
@@ -175,6 +229,9 @@
     let html = '<div class="grid">';
     for (const p of ordenados) {
       html += `<article class="card">
+        ${p.imagen_url
+          ? `<img class="foto" src="${p.imagen_url}" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'foto-vacia',textContent:'sin foto'}))">`
+          : `<div class="foto-vacia">sin foto</div>`}
         <span class="proveedor">${p.proveedor}</span>
         <a class="titulo" href="${p.url}" target="_blank" rel="noopener">${p.titulo}</a>
         <div class="precios">

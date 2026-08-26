@@ -59,6 +59,7 @@ create table baratito.productos (
   proveedor_id uuid references baratito.proveedores(id) on delete cascade,
   titulo text not null,
   url text unique not null,
+  imagen_url text,
   created_at timestamptz default now()
 );
 
@@ -158,6 +159,7 @@ function parsePrecio(texto) {
 // busca cada link, y si el contenedor cercano tiene un precio, lo toma como producto.
 function extraerProductos(html, urlBase) {
   const $ = cheerio.load(html);
+  $('script, style, noscript').remove(); // su texto interno no debe colarse como título ni precio
   const vistos = new Set();
   const productos = [];
 
@@ -200,10 +202,40 @@ function extraerProductos(html, urlBase) {
     }
     if (!titulo || titulo.length < 4) return;
 
+    // Buscar imagen. Muchas veces está fuera del contenedor donde se encontró
+    // el precio, así que si no aparece ahí, seguimos subiendo un poco más.
+    let nodoImg = contenedor;
+    let imgEl = nodoImg.find('img').first();
+    let intentosImg = 0;
+    while (imgEl.length === 0 && intentosImg < 4) {
+      nodoImg = nodoImg.parent();
+      if (nodoImg.length === 0) break;
+      imgEl = nodoImg.find('img').first();
+      intentosImg++;
+    }
+
+    let imagenUrl = null;
+    if (imgEl.length) {
+      const candidato =
+        imgEl.attr('data-src') ||
+        imgEl.attr('data-original') ||
+        imgEl.attr('data-lazy') ||
+        (imgEl.attr('srcset') || '').split(',')[0]?.trim().split(' ')[0] ||
+        imgEl.attr('src');
+      if (candidato && !candidato.startsWith('data:')) {
+        try {
+          imagenUrl = new URL(candidato, urlBase).toString();
+        } catch {
+          imagenUrl = null;
+        }
+      }
+    }
+
     vistos.add(url);
     productos.push({
       titulo,
       url,
+      imagen_url: imagenUrl,
       precio: Math.max(...precios),          // precio de lista/tarjeta (el más alto)
       precio_efectivo: Math.min(...precios), // precio contado/transferencia (el más bajo)
     });
@@ -232,11 +264,11 @@ async function getOrCreateProveedor(nombre, urlBase, rubro) {
   return creado.id;
 }
 
-async function upsertProducto(proveedorId, titulo, url) {
+async function upsertProducto(proveedorId, titulo, url, imagenUrl) {
   const { data, error } = await supabase
     .from('productos')
     .upsert(
-      { proveedor_id: proveedorId, titulo, url },
+      { proveedor_id: proveedorId, titulo, url, imagen_url: imagenUrl },
       { onConflict: 'url' }
     )
     .select('id')
@@ -272,7 +304,7 @@ async function procesarPagina(proveedorId, url) {
 
   for (const p of productos) {
     try {
-      const productoId = await upsertProducto(proveedorId, p.titulo, p.url);
+      const productoId = await upsertProducto(proveedorId, p.titulo, p.url, p.imagen_url);
       await insertSnapshot(productoId, p.precio, p.precio_efectivo);
     } catch (err) {
       console.error(`    Error guardando "${p.titulo}":`, err.message);
