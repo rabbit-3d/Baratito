@@ -20,12 +20,16 @@
 //      npm install @supabase/supabase-js ws cheerio
 //      SUPABASE_URL=... SUPABASE_SERVICE_KEY=... node comparador.js
 //
-// AGREGAR O SACAR PROVEEDORES O PÁGINAS:
-//   Editá el array CONFIG.proveedores de más abajo. Cada proveedor tiene una
-//   lista de "paginas" (URLs de categoría/listado) que el script recorre.
-//   No hace falta que sea la página de un solo producto: mientras la página
-//   muestre varios productos con su precio (como una categoría o el inicio),
-//   el script los detecta todos solo.
+// AGREGAR O SACAR PROVEEDORES O PÁGINAS (ya no se edita este archivo):
+//   Todo vive en Supabase ahora, en las tablas "proveedores" y "paginas".
+//   Para agregar un proveedor nuevo:
+//     insert into baratito.proveedores (nombre, url_base, rubro)
+//     values ('Nombre del negocio', 'https://sitio.com', 'bicicleteria');
+//   Y una fila en "paginas" por cada URL de categoría/listado que quieras
+//   que recorra (usando el id que te devolvió el insert anterior):
+//     insert into baratito.paginas (proveedor_id, url)
+//     values ('el-id-que-devolvio-el-insert', 'https://sitio.com/categoria');
+//   Para pausar un proveedor o una página sin borrarla, poné activo = false.
 //
 // CÓMO DETECTA LOS PRODUCTOS (para entender si falla en algún sitio nuevo):
 //   No usa una plantilla fija por sitio. Busca cada link de la página, mira
@@ -63,6 +67,17 @@ create table baratito.productos (
   created_at timestamptz default now()
 );
 
+-- Páginas de listado (categorías, inicio, etc.) que el cron recorre por cada proveedor.
+-- Antes esto vivía hardcodeado en comparador.js; ahora se administra acá,
+-- así agregar un proveedor nuevo no requiere tocar código ni GitHub.
+create table baratito.paginas (
+  id uuid primary key default gen_random_uuid(),
+  proveedor_id uuid references baratito.proveedores(id) on delete cascade,
+  url text not null,
+  activo boolean default true,
+  created_at timestamptz default now()
+);
+
 create table baratito.snapshots (
   id uuid primary key default gen_random_uuid(),
   producto_id uuid references baratito.productos(id) on delete cascade,
@@ -80,6 +95,7 @@ create index if not exists idx_productos_proveedor
 alter table baratito.proveedores enable row level security;
 alter table baratito.productos enable row level security;
 alter table baratito.snapshots enable row level security;
+alter table baratito.paginas enable row level security;
 
 create policy "lectura publica proveedores" on baratito.proveedores
   for select using (true);
@@ -87,50 +103,42 @@ create policy "lectura publica productos" on baratito.productos
   for select using (true);
 create policy "lectura publica snapshots" on baratito.snapshots
   for select using (true);
+create policy "lectura publica paginas" on baratito.paginas
+  for select using (true);
 
 grant usage on schema baratito to anon, authenticated, service_role;
 grant select on all tables in schema baratito to anon, authenticated;
 grant all on all tables in schema baratito to service_role;
 alter default privileges in schema baratito grant select on tables to anon, authenticated;
 alter default privileges in schema baratito grant all on tables to service_role;
+
+-- Sembrado: los 3 proveedores y páginas que ya veníamos usando hardcodeados
+insert into baratito.proveedores (nombre, url_base, rubro)
+select v.nombre, v.url_base, v.rubro
+from (values
+  ('Marcovecchio Bikes', 'https://marcovecchiobikes.com', 'bicicleteria'),
+  ('Popeye ProBike', 'https://popeyeprobike.com.ar', 'bicicleteria'),
+  ('Sin-Limite', 'https://sin-limite.com.ar', 'bicicleteria')
+) as v(nombre, url_base, rubro)
+where not exists (select 1 from baratito.proveedores p where p.nombre = v.nombre);
+
+insert into baratito.paginas (proveedor_id, url)
+select p.id, d.pagina from (
+  values
+    ('Marcovecchio Bikes', 'https://marcovecchiobikes.com/bicicletas'),
+    ('Marcovecchio Bikes', 'https://marcovecchiobikes.com/componentes'),
+    ('Popeye ProBike', 'https://popeyeprobike.com.ar/bicicletas/'),
+    ('Sin-Limite', 'https://sin-limite.com.ar/')
+) as d(nombre, pagina)
+join baratito.proveedores p on p.nombre = d.nombre
+where not exists (
+  select 1 from baratito.paginas pg where pg.proveedor_id = p.id and pg.url = d.pagina
+);
 */
 
 import { createClient } from '@supabase/supabase-js';
 import ws from 'ws';
 import * as cheerio from 'cheerio';
-
-// ============================================================================
-// CONFIG — acá se agregan o sacan proveedores y páginas a recorrer
-// ============================================================================
-const CONFIG = {
-  proveedores: [
-    {
-      nombre: 'Marcovecchio Bikes',
-      url_base: 'https://marcovecchiobikes.com',
-      activo: true,
-      paginas: [
-        'https://marcovecchiobikes.com/bicicletas',
-        'https://marcovecchiobikes.com/componentes',
-      ],
-    },
-    {
-      nombre: 'Popeye ProBike',
-      url_base: 'https://popeyeprobike.com.ar',
-      activo: true,
-      paginas: [
-        'https://popeyeprobike.com.ar/bicicletas/',
-      ],
-    },
-    {
-      nombre: 'Sin-Limite',
-      url_base: 'https://sin-limite.com.ar',
-      activo: true,
-      paginas: [
-        'https://sin-limite.com.ar/',
-      ],
-    },
-  ],
-};
 
 // ============================================================================
 // SCRIPT
@@ -252,26 +260,6 @@ function extraerProductos(html, urlBase) {
   return productos;
 }
 
-async function getOrCreateProveedor(nombre, urlBase, rubro) {
-  const { data: existente, error: selectError } = await supabase
-    .from('proveedores')
-    .select('id')
-    .eq('nombre', nombre)
-    .maybeSingle();
-
-  if (selectError) throw selectError;
-  if (existente) return existente.id;
-
-  const { data: creado, error: insertError } = await supabase
-    .from('proveedores')
-    .insert({ nombre, url_base: urlBase, rubro })
-    .select('id')
-    .single();
-
-  if (insertError) throw insertError;
-  return creado.id;
-}
-
 async function upsertProducto(proveedorId, titulo, url, imagenUrl) {
   const { data, error } = await supabase
     .from('productos')
@@ -321,18 +309,24 @@ async function procesarPagina(proveedorId, url) {
 }
 
 async function main() {
-  const proveedoresActivos = CONFIG.proveedores.filter((p) => p.activo !== false);
+  const { data: proveedores, error } = await supabase
+    .from('proveedores')
+    .select('id, nombre, paginas(id, url, activo)')
+    .eq('activo', true);
 
-  for (const proveedor of proveedoresActivos) {
-    console.log(`Proveedor: ${proveedor.nombre}`);
-    const proveedorId = await getOrCreateProveedor(
-      proveedor.nombre,
-      proveedor.url_base,
-      proveedor.rubro || 'bicicleteria'
-    );
+  if (error) throw error;
 
-    for (const pagina of proveedor.paginas) {
-      await procesarPagina(proveedorId, pagina);
+  if (!proveedores || proveedores.length === 0) {
+    console.log('No hay proveedores activos en la base. Agregá uno en la tabla baratito.proveedores.');
+    return;
+  }
+
+  for (const proveedor of proveedores) {
+    const paginasActivas = (proveedor.paginas || []).filter((p) => p.activo !== false);
+    console.log(`Proveedor: ${proveedor.nombre} (${paginasActivas.length} página/s)`);
+
+    for (const pagina of paginasActivas) {
+      await procesarPagina(proveedor.id, pagina.url);
       await sleep(1000); // respiro entre páginas, buena práctica con cualquier sitio
     }
   }
